@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const hbs = require('hbs');
+const request = require('postman-request');
 
 // Define paths for Express config.
 const publicDirPath = path.join(__dirname, '../public');
@@ -40,9 +41,22 @@ app.get('/help', (req, res) => {
 });
 
 app.get('/weather', (req, res) => {
-  res.send({
-    forecast: "Cloudy",
-    location: "Islamabad",
+  if(!req.query.address) {
+    return res.send({
+      error: "You must provide an address."
+    });
+  }
+
+  const url = `http://api.weatherstack.com/current?access_key=3baa6cdad23f368a63c7a3a37ff4a508&query=${req.query.address}`;
+
+  request({ url: url, json: true }, (error, response) => {
+    const { temperature, feelslike, weather_descriptions } = response.body.current;
+    res.send({
+      forecast: weather_descriptions[0],
+      temperature,
+      feelslike,
+      address: req.query.address,
+    });
   });
 });
 
